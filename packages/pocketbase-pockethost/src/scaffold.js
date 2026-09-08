@@ -42,11 +42,11 @@ export async function scaffoldProject(targetDir, packageVersion, { force = false
       },
       environments: {
         production: {
-          tenantId: "",
+          instanceName: "",
           healthcheckBaseUrl: ""
         },
         staging: {
-          tenantId: "",
+          instanceName: "",
           healthcheckBaseUrl: ""
         }
       }
@@ -65,4 +65,3 @@ export async function scaffoldProject(targetDir, packageVersion, { force = false
 
   return resolvedTargetDir;
 }
-
