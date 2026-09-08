@@ -81,4 +81,4 @@ Sync migration history:
 - Defaulting to the latest PocketBase release is convenient for quick validation.
 - Pin a specific version when reproducing a production issue or validating a release upgrade.
 - PocketBase uses `--dir` for the data directory flag. Do not document `--dataDir` in new examples.
-- Keep the binary download step and the hosted deployment step separate. Use `$pockethost` for the GitHub Actions and FTP side.
+- Keep the binary download step and the hosted deployment step separate. Use `$pockethost` for the GitHub Actions and SFTP deployment side.

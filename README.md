@@ -2,7 +2,7 @@
 
 This repository now has one main goal: make PocketBase and Pockethost projects ultra-simple.
 
-The main user-facing product is the npm package:
+The main user-facing product is the cross-platform binary:
 
 - `pocketbase-pockethost`
 
@@ -11,7 +11,7 @@ It is designed for:
 - small zero-build sites served from `pb_public`
 - PocketBase projects that still need hooks and migrations
 - GitHub-based deploys
-- manual FTP deploys for people not using GitHub
+- SFTP deploys for local use and GitHub Actions
 
 ## What Lives In This Repository
 
@@ -34,21 +34,21 @@ The preferred model is:
 - let that workflow call the CLI
 - keep branch mapping convention-based
 
-### 3. Node CLI + Library
+### 3. Go CLI
 
-The new automation core lives in:
+The deployment automation core lives in:
 
-- [packages/pocketbase-pockethost/package.json](/Users/evaisse/Sites/projects/pocketbase-pockethost-skills/packages/pocketbase-pockethost/package.json)
+- [cmd/pocketbase-pockethost/main.go](cmd/pocketbase-pockethost/main.go)
 
 This package provides:
 
 - project scaffolding
-- PocketBase binary management through `.pb_version`
-- local development commands
-- migration and hook generators
+- PocketBase binary downloads through `.pb_version`
+- isolated migration validation
+- Ed25519 key generation
 - health checks
+- SFTP synchronization with a remote state manifest
 - GitHub workflow generation
-- manual FTP deploys
 
 ## Default Project Model
 
@@ -68,19 +68,17 @@ The zero-build default is intentionally small:
 
 ## CLI Commands
 
-The v1 command surface is:
+The binary command surface is:
 
-- `npx pocketbase-pockethost init`
-- `npx pocketbase-pockethost install`
-- `npx pocketbase-pockethost dev`
-- `npx pocketbase-pockethost test`
-- `npx pocketbase-pockethost doctor`
-- `npx pocketbase-pockethost health`
-- `npx pocketbase-pockethost deploy`
-- `npx pocketbase-pockethost ftp:deploy`
-- `npx pocketbase-pockethost workflow:install`
-- `npx pocketbase-pockethost migration:new <name>`
-- `npx pocketbase-pockethost hooks:new <name>`
+- `pocketbase-pockethost init`
+- `pocketbase-pockethost key generate`
+- `pocketbase-pockethost pocketbase install`
+- `pocketbase-pockethost validate`
+- `pocketbase-pockethost doctor`
+- `pocketbase-pockethost deploy --dry-run`
+- `pocketbase-pockethost deploy`
+- `pocketbase-pockethost health`
+- `pocketbase-pockethost workflow install`
 
 ## Repository Direction
 
@@ -90,6 +88,8 @@ The direction is now:
 - convention over configuration
 - one config file: `.pb_config.json`
 - one PocketBase version file: `.pb_version`
-- Node/NPM as the only required user dependency
+- one statically linked Go binary as the only required user dependency
+- SFTP only, using `ftp.pockethost.io:2222`
+- no remote management of `pb_data`
 
 Legacy copy-paste assets such as long `Makefile`-driven flows are kept only as transitional material while the CLI becomes the default path.

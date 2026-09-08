@@ -1,6 +1,6 @@
 # __PROJECT_TITLE__
 
-This project uses the `pocketbase-pockethost` CLI.
+This project uses the `pocketbase-pockethost` project conventions. New deployments should install the Go `pocketbase-pockethost` binary.
 
 Most users should only edit:
 
@@ -23,6 +23,7 @@ GitHub Environments:
 
 Required GitHub Environment values:
 
-- `POCKETHOST_FTP_USERNAME` as a secret
-- `POCKETHOST_FTP_PASSWORD` as a secret
-- `POCKETHOST_TENANT_ID` as a variable or secret
+- `POCKETHOST_SFTP_USERNAME` as a secret
+- `POCKETHOST_SFTP_PRIVATE_KEY` as a secret
+- `POCKETHOST_SFTP_HOST_KEY` as a variable
+- `POCKETHOST_INSTANCE_NAME` as a variable or secret

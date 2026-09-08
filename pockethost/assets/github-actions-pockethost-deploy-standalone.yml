@@ -1,51 +1,33 @@
-# Standalone local workflow.
-# This file is intentionally identical to the generated workflow so copy-paste and generated setups stay aligned.
-name: Deploy to Pockethost
+name: Deploy to PocketHost (standalone)
 
 on:
-  push:
-    branches:
-      - main
-      - master
-      - staging
   workflow_dispatch:
 
 permissions:
   contents: read
 
-concurrency:
-  group: pockethost-deploy-${{ github.ref_name }}
-  cancel-in-progress: true
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref_name == 'staging' && 'staging' || 'production' }}
+    environment: production
     env:
-      POCKETHOST_FTP_USERNAME: ${{ secrets.POCKETHOST_FTP_USERNAME }}
-      POCKETHOST_FTP_PASSWORD: ${{ secrets.POCKETHOST_FTP_PASSWORD }}
-      POCKETHOST_TENANT_ID: ${{ vars.POCKETHOST_TENANT_ID != '' && vars.POCKETHOST_TENANT_ID || secrets.POCKETHOST_TENANT_ID }}
-      HEALTHCHECK_BASE_URL: ${{ vars.HEALTHCHECK_BASE_URL }}
-      GITHUB_REF_NAME: ${{ github.ref_name }}
+      POCKETHOST_SFTP_USERNAME: ${{ secrets.POCKETHOST_SFTP_USERNAME }}
+      POCKETHOST_SFTP_PRIVATE_KEY: ${{ secrets.POCKETHOST_SFTP_PRIVATE_KEY }}
+      POCKETHOST_SFTP_HOST_KEY: ${{ vars.POCKETHOST_SFTP_HOST_KEY }}
+      POCKETHOST_INSTANCE_NAME: ${{ vars.POCKETHOST_INSTANCE_NAME != '' && vars.POCKETHOST_INSTANCE_NAME || secrets.POCKETHOST_INSTANCE_NAME }}
 
     steps:
-      - name: Checkout current commit
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Validate project and deploy configuration
-        run: npx pocketbase-pockethost doctor --strict --for deploy
-
-      - name: Run project checks
-        run: npx pocketbase-pockethost test
-
-      - name: Deploy project
-        run: npx pocketbase-pockethost deploy
+      - uses: actions/checkout@v4
+      - name: Install pocketbase-pockethost
+        env:
+          VERSION: 0.1.0
+        run: |
+          curl --fail --location --silent --show-error \
+            "https://github.com/8bit-interactive/pocketbase-pockethost-skills/releases/download/v${VERSION}/pocketbase-pockethost_${VERSION}_linux_amd64.tar.gz" \
+            --output /tmp/pocketbase-pockethost.tar.gz
+          tar -xzf /tmp/pocketbase-pockethost.tar.gz -C /tmp
+          install /tmp/pocketbase-pockethost /usr/local/bin/pocketbase-pockethost
+      - run: pocketbase-pockethost doctor
+      - run: pocketbase-pockethost validate
+      - run: pocketbase-pockethost deploy
+      - run: pocketbase-pockethost health

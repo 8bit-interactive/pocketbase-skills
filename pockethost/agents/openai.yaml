@@ -1,4 +1,4 @@
 interface:
   display_name: "Pockethost"
   short_description: "Pockethost hosting, CLI automation, health checks, and deployment guide"
-  default_prompt: "Use $pockethost to create or update a Pockethost project with the pocketbase-pockethost CLI, local GitHub Actions workflow generation, FTP deployment, environment conventions, and health checks."
+  default_prompt: "Use $pockethost to create or update a PocketHost project with the pocketbase-pockethost CLI, SFTP deployment, local GitHub Actions workflow generation, environment conventions, and health checks."

@@ -2,7 +2,7 @@
 # Prefer npm scripts and the pocketbase-pockethost CLI directly.
 SHELL := /bin/sh
 
-CLI ?= npx pocketbase-pockethost
+CLI ?= pocketbase-pockethost
 
 .PHONY: build check deploy dev ftp-deploy health install lint test workflow-install
 
@@ -25,10 +25,10 @@ deploy:
 	$(CLI) deploy
 
 ftp-deploy:
-	$(CLI) ftp:deploy
+	$(CLI) deploy
 
 health:
 	$(CLI) health
 
 workflow-install:
-	$(CLI) workflow:install --force
+	$(CLI) workflow install --force

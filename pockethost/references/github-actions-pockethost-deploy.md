@@ -1,83 +1,46 @@
-# GitHub Actions Deployment for Pockethost
+# GitHub Actions deployment for PocketHost
 
-Use this reference when a repository needs a standard GitHub Actions workflow for deploying to Pockethost.
+The recommended workflow downloads a pinned `pocketbase-pockethost` release and runs the same commands used locally:
 
-## Current Direction
+1. check out the repository;
+2. install the pinned binary and verify its checksum;
+3. run `pocketbase-pockethost doctor`;
+4. run `pocketbase-pockethost validate`;
+5. run `pocketbase-pockethost deploy`;
+6. run `pocketbase-pockethost health`.
 
-The preferred model is no longer:
+## Environment configuration
 
-- copy a long workflow
-- copy a long `Makefile`
-- maintain shell logic in every project
+Create GitHub Environments named `production` and `staging`.
 
-The preferred model is now:
+Required secrets:
 
-1. scaffold or maintain the project with `pocketbase-pockethost`
-2. generate a local workflow in the consuming repository
-3. let GitHub Actions call the CLI for `doctor`, `test`, and `deploy`
+- `POCKETHOST_SFTP_USERNAME`
+- `POCKETHOST_SFTP_PRIVATE_KEY`
 
-## Project Conventions
+Required variables:
 
-Default conventions:
+- `POCKETHOST_INSTANCE_NAME`
+- `POCKETHOST_SFTP_HOST_KEY`
 
-- `main` -> GitHub Environment `production`
-- `master` -> GitHub Environment `production`
-- `staging` -> GitHub Environment `staging`
-- `pb_public/` is the main static site surface
-- `pb_hooks/` and `pb_migrations/` are optional
-- `.pb_version` pins the PocketBase version
-- `.pb_config.json` is the single explicit project config file
+Optional variables:
 
-## Required GitHub Environment Configuration
+- `HEALTHCHECK_BASE_URL`
+- `POCKETHOST_SFTP_HOST`
+- `POCKETHOST_SFTP_PORT`
 
-For both `production` and `staging`, configure:
+The private key must be an Ed25519 OpenSSH key registered in PocketHost Account → Keys. The host key variable must contain the documented PocketHost host fingerprint or an authorized public-key line. The CLI rejects unpinned SFTP hosts.
 
-- `POCKETHOST_FTP_USERNAME` as an environment secret
-- `POCKETHOST_FTP_PASSWORD` as an environment secret
-- `POCKETHOST_TENANT_ID` as an environment variable or secret
+## Project conventions
 
-Optional:
+- `main` → `production`
+- `master` → `production`
+- `staging` → `staging`
+- `.pb_version` pins the PocketBase release;
+- `.pb_config.json` is the only project-specific configuration file.
 
-- `HEALTHCHECK_BASE_URL` as an environment variable when the public URL should not be derived from the tenant ID
+The generated workflow is intentionally small. It delegates validation, checksum verification, SFTP synchronization, and health checks to the binary so local and CI deployments share the same behavior.
 
-## Workflow Behavior
+## Synchronization behavior
 
-The generated workflow should:
-
-1. check out the repository
-2. install Node dependencies
-3. run `pocketbase-pockethost doctor --strict --for deploy`
-4. run `pocketbase-pockethost test`
-5. run `pocketbase-pockethost deploy`
-
-This keeps the workflow very small and pushes the real logic into the CLI.
-
-## Why This Is Better
-
-Compared with the previous shell-heavy approach:
-
-- fewer project files need manual editing
-- fewer long workflow branches live in YAML
-- local and CI deploys share the same deploy engine
-- PocketBase version management moves into `.pb_version`
-- GitHub failures become easier to explain because `doctor` fails early with configuration-specific messages
-
-## FTP Deployment Rules
-
-The CLI deploy behavior should stay convention-based:
-
-- `pb_public` uploads to `${POCKETHOST_TENANT_ID}/pb_public/` when a tenant ID is available
-- otherwise `pb_public` uploads to `pb_public/`
-- `pb_hooks` and `pb_migrations` require a tenant-scoped path
-
-Manual FTP deploy stays supported for users who do not use GitHub.
-
-## Transitional Assets
-
-These files remain in the repository during the transition:
-
-- [../assets/github-actions-pockethost-deploy.yml](../assets/github-actions-pockethost-deploy.yml)
-- [../assets/github-actions-pockethost-deploy-standalone.yml](../assets/github-actions-pockethost-deploy-standalone.yml)
-- [../assets/Makefile](../assets/Makefile)
-
-Treat them as compatibility material, not the long-term center of the product.
+The CLI maintains `.ftp-deploy-sync-state.json` in the remote instance directory for compatibility with the established FTP-Deploy-Action manifest format. It uploads new and changed files and removes only files previously managed by the manifest. Unknown remote files and PocketBase data remain untouched.
