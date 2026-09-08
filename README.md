@@ -39,6 +39,7 @@ The preferred model is:
 The deployment automation core lives in:
 
 - [cli/cmd/pocketbase-pockethost/main.go](cli/cmd/pocketbase-pockethost/main.go)
+- [Makefile](Makefile)
 
 This package provides:
 
@@ -66,7 +67,7 @@ The zero-build default is intentionally small:
 
 - edit `pb_public/index.html`
 - edit `pb_public/assets/site.css`
-- use `npm run dev`
+- use `make check`
 - push `staging`
 - then push `main`
 
@@ -96,4 +97,15 @@ The direction is now:
 - SFTP only, using `ftp.pockethost.io:2222`
 - no remote management of `pb_data`
 
-Legacy copy-paste assets such as long `Makefile`-driven flows are kept only as transitional material while the CLI becomes the default path.
+## Development commands
+
+The root toolchain is Make + Go:
+
+- `make check` runs tests and `go vet`;
+- `make build` builds the local CLI;
+- `make build-all VERSION=0.1.0` builds the six release targets;
+- `make install` installs the CLI with `go install`.
+
+The Node package under `packages/pocketbase-pockethost` is retained only as a legacy compatibility package and is not part of the root development toolchain.
+
+The legacy Node package and copy-paste assets remain only for compatibility; the root `Makefile` and Go CLI are the supported development path.

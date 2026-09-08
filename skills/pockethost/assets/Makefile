@@ -1,33 +1,23 @@
-# Legacy compatibility wrapper.
-# Prefer npm scripts and the pocketbase-pockethost CLI directly.
+# Compatibility Makefile for projects that install pocketbase-pockethost globally.
 SHELL := /bin/sh
 
 CLI ?= pocketbase-pockethost
 
-.PHONY: build check deploy dev ftp-deploy sftp-deploy health install lint test workflow-install
+.PHONY: check test deploy health install build workflow-install
 
 install:
-	npm install
+	$(CLI) pocketbase install
 
-check lint:
-	$(CLI) doctor --strict
+check:
+	$(CLI) doctor
 
 test:
-	$(CLI) test
+	$(CLI) validate
 
 build:
-	@echo "No build step is required by default. Keep editing pb_public/ directly."
-
-dev:
-	$(CLI) dev
+	@echo "No frontend build is required for a zero-build PocketBase site."
 
 deploy:
-	$(CLI) deploy
-
-ftp-deploy:
-	$(CLI) deploy
-
-sftp-deploy:
 	$(CLI) deploy
 
 health:

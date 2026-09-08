@@ -18,8 +18,8 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
-      - run: go test ./...
-      - run: CGO_ENABLED=0 go build ./cli/cmd/pocketbase-pockethost
+      - run: make check
+      - run: make build
 
   cross-build:
     runs-on: ubuntu-latest
@@ -44,7 +44,7 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
-      - run: go build ./cli/cmd/pocketbase-pockethost
+      - run: make build
         env:
           CGO_ENABLED: 0
           GOOS: ${{ matrix.goos }}
