@@ -104,6 +104,7 @@ export async function deployProject(project, options = {}) {
   }
 
   const client = new SftpClient();
+  let deploymentError;
 
   try {
     await client.connect({
@@ -127,8 +128,17 @@ export async function deployProject(project, options = {}) {
       console.log(`Uploading pb_migrations -> ${migrationsDir}`);
       await deployDirectory(client, path.join(project.projectRoot, "pb_migrations"), migrationsDir);
     }
+  } catch (error) {
+    deploymentError = error;
+    throw error;
   } finally {
-    await client.end();
+    try {
+      await client.end();
+    } catch (closeError) {
+      if (!deploymentError) {
+        throw closeError;
+      }
+    }
   }
 
   if (surface.pbPublic) {

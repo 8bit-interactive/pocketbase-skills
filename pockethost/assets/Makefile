@@ -25,7 +25,7 @@ deploy:
 	$(CLI) deploy
 
 ftp-deploy:
-	$(CLI) ftp:deploy
+	$(CLI) deploy
 
 sftp-deploy:
 	$(CLI) deploy
