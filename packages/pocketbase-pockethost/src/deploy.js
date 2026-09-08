@@ -10,7 +10,9 @@ async function deployDirectory(client, localDir, remoteDir) {
 
 async function resolvePrivateKey() {
   if (process.env.POCKETHOST_SFTP_PRIVATE_KEY) {
-    return process.env.POCKETHOST_SFTP_PRIVATE_KEY.replace(/\\r\\n/g, "\\n");
+    return process.env.POCKETHOST_SFTP_PRIVATE_KEY
+      .replace(/\r\n/g, "\n")
+      .replace(/\\n/g, "\n");
   }
 
   if (process.env.POCKETHOST_SFTP_PRIVATE_KEY_PATH) {
