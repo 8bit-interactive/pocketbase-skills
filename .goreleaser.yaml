@@ -8,6 +8,8 @@ builds:
   - id: pocketbase-pockethost
     main: ./cmd/pocketbase-pockethost
     binary: pocketbase-pockethost
+    ldflags:
+      - -s -w -X main.cliVersion={{ .Version }}
     env:
       - CGO_ENABLED=0
     goos: [linux, darwin, windows]

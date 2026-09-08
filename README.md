@@ -50,6 +50,10 @@ This package provides:
 - SFTP synchronization with a remote state manifest
 - GitHub workflow generation
 
+### 4. Hosted demonstration
+
+The [demo/](demo/) directory is a zero-build site deployed by [demo-pockethost-deploy.yml](.github/workflows/demo-pockethost-deploy.yml). Configure the `staging` and `production` GitHub Environments to use it as a live deployment example.
+
 ## Default Project Model
 
 The default generated project keeps the existing PocketBase layout:

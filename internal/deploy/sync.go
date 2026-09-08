@@ -260,6 +260,9 @@ func diff(local, remote []Entry) Result {
 	for _, entry := range local {
 		previous, exists := remoteByName[entry.Name]
 		if !exists || entry.Type != previous.Type {
+			if exists && entry.Type != previous.Type {
+				result.Deleted = append(result.Deleted, stateName(previous))
+			}
 			if entry.Type == "file" {
 				result.Uploaded = append(result.Uploaded, entry.Name)
 			} else {
@@ -275,7 +278,7 @@ func diff(local, remote []Entry) Result {
 	}
 	for _, entry := range remote {
 		if _, exists := localByName[entry.Name]; !exists {
-			result.Deleted = append(result.Deleted, entry.Name)
+			result.Deleted = append(result.Deleted, stateName(entry))
 		}
 	}
 	sort.Strings(result.Uploaded)
@@ -285,7 +288,36 @@ func diff(local, remote []Entry) Result {
 	return result
 }
 
+func stateName(entry Entry) string {
+	if entry.Type == "folder" {
+		return strings.TrimSuffix(entry.Name, "/") + "/"
+	}
+	return entry.Name
+}
+
 func apply(client *sftp.Client, root, remoteRoot string, local, remote State, result Result) error {
+	deleted := append([]string(nil), result.Deleted...)
+	sort.SliceStable(deleted, func(i, j int) bool {
+		leftDepth := strings.Count(deleted[i], "/")
+		rightDepth := strings.Count(deleted[j], "/")
+		if leftDepth != rightDepth {
+			return leftDepth > rightDepth
+		}
+		return deleted[i] > deleted[j]
+	})
+	for _, name := range deleted {
+		if name == SyncStateName || strings.HasPrefix(name, "pb_data/") {
+			continue
+		}
+		remotePath := path.Join(remoteRoot, name)
+		if strings.HasSuffix(name, "/") {
+			if err := client.RemoveDirectory(remotePath); err != nil {
+				return err
+			}
+		} else if err := client.Remove(remotePath); err != nil {
+			return err
+		}
+	}
 	for _, name := range append(append([]string{}, result.Uploaded...), result.Replaced...) {
 		if strings.HasSuffix(name, "/") {
 			continue
@@ -315,28 +347,6 @@ func apply(client *sftp.Client, root, remoteRoot string, local, remote State, re
 		}
 		if outputErr != nil {
 			return outputErr
-		}
-	}
-	deleted := append([]string(nil), result.Deleted...)
-	sort.SliceStable(deleted, func(i, j int) bool {
-		leftDepth := strings.Count(deleted[i], "/")
-		rightDepth := strings.Count(deleted[j], "/")
-		if leftDepth != rightDepth {
-			return leftDepth > rightDepth
-		}
-		return deleted[i] > deleted[j]
-	})
-	for _, name := range deleted {
-		if name == SyncStateName || strings.HasPrefix(name, "pb_data/") {
-			continue
-		}
-		remotePath := path.Join(remoteRoot, name)
-		if strings.HasSuffix(name, "/") {
-			if err := client.RemoveDirectory(remotePath); err != nil {
-				return err
-			}
-		} else if err := client.Remove(remotePath); err != nil {
-			return err
 		}
 	}
 	stateData, err := json.MarshalIndent(local, "", "  ")

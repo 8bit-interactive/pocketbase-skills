@@ -16,7 +16,7 @@ import (
 	"github.com/8bit-interactive/pocketbase-pockethost-skills/internal/project"
 )
 
-const cliVersion = "0.1.0"
+var cliVersion = "dev"
 
 func main() {
 	if err := run(os.Args[1:]); err != nil {
@@ -200,21 +200,52 @@ func doctorCommand(args []string) error {
 	result["instance"] = p.ResolveInstance(p.ResolveEnvironment(*environment))
 	result["sftpUsername"] = os.Getenv("POCKETHOST_SFTP_USERNAME") != ""
 	keyPath := os.Getenv("POCKETHOST_SFTP_PRIVATE_KEY_PATH")
-	result["privateKey"] = keyPath != "" || os.Getenv("POCKETHOST_SFTP_PRIVATE_KEY") != ""
+	result["privateKey"] = privateKeyIsUsable(keyPath, os.Getenv("POCKETHOST_SFTP_PRIVATE_KEY"))
+	result["hostKey"] = hostKeyIsConfigured()
 	if *jsonOutput {
 		data, _ := json.MarshalIndent(result, "", "  ")
 		fmt.Println(string(data))
 		return nil
 	}
 	fmt.Printf("Project: %s\nPocketBase: %s\nEnvironment: %s\nInstance: %s\n", p.Root, p.Version, result["environment"], result["instance"])
-	fmt.Printf("SFTP username: %t\nPrivate key: %t\n", result["sftpUsername"], result["privateKey"])
+	fmt.Printf("SFTP username: %t\nPrivate key: %t\nHost key: %t\n", result["sftpUsername"], result["privateKey"], result["hostKey"])
 	for name, present := range surface {
 		fmt.Printf("%s: %t\n", name, present)
 	}
-	if !result["sftpUsername"].(bool) || !result["privateKey"].(bool) || result["instance"] == "" {
+	if !result["sftpUsername"].(bool) || !result["privateKey"].(bool) || !result["hostKey"].(bool) || result["instance"] == "" {
 		return errors.New("deployment configuration is incomplete")
 	}
 	return nil
+}
+
+func privateKeyIsUsable(path, value string) bool {
+	data := []byte(value)
+	if len(data) == 0 && path != "" {
+		var err error
+		data, err = os.ReadFile(path)
+		if err != nil {
+			return false
+		}
+	}
+	if len(data) == 0 {
+		return false
+	}
+	_, err := keys.Signer([]byte(strings.ReplaceAll(string(data), `\n`, "\n")))
+	return err == nil
+}
+
+func hostKeyIsConfigured() bool {
+	if os.Getenv("POCKETHOST_SFTP_HOST_KEY") != "" {
+		return true
+	}
+	knownHosts := os.Getenv("POCKETHOST_SFTP_KNOWN_HOSTS")
+	if knownHosts == "" {
+		if home, err := os.UserHomeDir(); err == nil {
+			knownHosts = filepath.Join(home, ".ssh", "known_hosts")
+		}
+	}
+	_, err := os.Stat(knownHosts)
+	return err == nil
 }
 
 func deployCommand(args []string) error {

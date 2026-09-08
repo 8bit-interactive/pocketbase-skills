@@ -13,7 +13,7 @@ Main commands:
 - `doctor`
 - `health`
 - `deploy`
-- `deploy` (legacy FTP compatibility)
+- `deploy` (legacy Node compatibility)
 - `workflow:install`
 - `migration:new`
 - `hooks:new`
