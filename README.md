@@ -19,8 +19,8 @@ It is designed for:
 
 These folders keep the Codex guidance:
 
-- `pocketbase/`
-- `pockethost/`
+- `skills/pocketbase/`
+- `skills/pockethost/`
 
 They still document conventions, but the preferred operational surface is now the CLI.
 
@@ -38,7 +38,7 @@ The preferred model is:
 
 The deployment automation core lives in:
 
-- [cmd/pocketbase-pockethost/main.go](cmd/pocketbase-pockethost/main.go)
+- [cli/cmd/pocketbase-pockethost/main.go](cli/cmd/pocketbase-pockethost/main.go)
 
 This package provides:
 

@@ -5,3 +5,4 @@ pb_data/
 .tmp/
 .pockethost-sync-state.json
 .ftp-deploy-sync-state.json
+/cli/pocketbase-pockethost

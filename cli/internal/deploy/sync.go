@@ -16,8 +16,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/8bit-interactive/pocketbase-pockethost-skills/internal/keys"
-	"github.com/8bit-interactive/pocketbase-pockethost-skills/internal/project"
+	"github.com/8bit-interactive/pocketbase-pockethost-skills/cli/internal/keys"
+	"github.com/8bit-interactive/pocketbase-pockethost-skills/cli/internal/project"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/knownhosts"

@@ -6,7 +6,7 @@ before:
 
 builds:
   - id: pocketbase-pockethost
-    main: ./cmd/pocketbase-pockethost
+    main: ./cli/cmd/pocketbase-pockethost
     binary: pocketbase-pockethost
     ldflags:
       - -s -w -X main.cliVersion={{ .Version }}

@@ -8,6 +8,6 @@
     "cli": "node packages/pocketbase-pockethost/bin/pocketbase-pockethost.js",
     "test:cli": "node packages/pocketbase-pockethost/bin/pocketbase-pockethost.js --help",
     "test:go": "go test ./...",
-    "build:go": "CGO_ENABLED=0 go build ./cmd/pocketbase-pockethost"
+    "build:go": "CGO_ENABLED=0 go build -o ./cli/pocketbase-pockethost ./cli/cmd/pocketbase-pockethost"
   }
 }
