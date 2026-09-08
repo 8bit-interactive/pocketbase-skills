@@ -58,6 +58,8 @@ jobs:
     secrets: inherit
 ```
 
+For callers outside the same organization, replace `secrets: inherit` with explicit mappings for `POCKETHOST_SFTP_USERNAME`, `POCKETHOST_SFTP_PRIVATE_KEY`, and `POCKETHOST_INSTANCE_NAME`.
+
 The workflow uses `wlixcc/SFTP-Deploy-Action@v1.2.6` with `sftp_only: true` and uploads `pb_public`, `pb_hooks`, and `pb_migrations` when present. It never sends an FTP password and does not delete remote files by default.
 
 ## Local CLI deployment

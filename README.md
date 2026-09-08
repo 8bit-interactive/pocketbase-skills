@@ -113,6 +113,8 @@ jobs:
     secrets: inherit
 ```
 
+For a caller outside the same organization, pass the three values explicitly in the `secrets` mapping instead of using `secrets: inherit`.
+
 Create a project quickly with `npx pocketbase-pockethost init`, then run `npx pocketbase-pockethost workflow:install`.
 
 Legacy copy-paste assets such as long `Makefile`-driven flows are kept only as transitional material while the CLI becomes the default path.

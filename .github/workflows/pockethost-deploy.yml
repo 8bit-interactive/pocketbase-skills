@@ -8,6 +8,13 @@ on:
         required: false
         type: string
         default: .
+    secrets:
+      POCKETHOST_SFTP_USERNAME:
+        required: false
+      POCKETHOST_SFTP_PRIVATE_KEY:
+        required: false
+      POCKETHOST_INSTANCE_NAME:
+        required: false
 
 permissions:
   contents: read
