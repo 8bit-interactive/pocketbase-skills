@@ -1,0 +1,20 @@
+{
+  "projectName": "pocketbase-pockethost-skills-demo",
+  "pockethost": {
+    "branchEnvironmentMap": {
+      "main": "production",
+      "master": "production",
+      "staging": "staging"
+    },
+    "environments": {
+      "production": {
+        "instanceName": "pocketbase-pockethost-skills",
+        "healthcheckBaseUrl": "https://pocketbase-pockethost-skills.pockethost.io"
+      },
+      "staging": {
+        "instanceName": "pocketbase-pockethost-skills-staging",
+        "healthcheckBaseUrl": "https://pocketbase-pockethost-skills-staging.pockethost.io"
+      }
+    }
+  }
+}

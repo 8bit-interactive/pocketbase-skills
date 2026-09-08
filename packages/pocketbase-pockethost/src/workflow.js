@@ -28,9 +28,10 @@ jobs:
     runs-on: ubuntu-latest
     environment: \${{ github.ref_name == 'staging' && 'staging' || 'production' }}
     env:
-      POCKETHOST_FTP_USERNAME: \${{ secrets.POCKETHOST_FTP_USERNAME }}
-      POCKETHOST_FTP_PASSWORD: \${{ secrets.POCKETHOST_FTP_PASSWORD }}
-      POCKETHOST_TENANT_ID: \${{ vars.POCKETHOST_TENANT_ID != '' && vars.POCKETHOST_TENANT_ID || secrets.POCKETHOST_TENANT_ID }}
+      POCKETHOST_SFTP_USERNAME: \${{ secrets.POCKETHOST_SFTP_USERNAME }}
+      POCKETHOST_SFTP_PRIVATE_KEY: \${{ secrets.POCKETHOST_SFTP_PRIVATE_KEY }}
+      POCKETHOST_SFTP_HOST_KEY: \${{ vars.POCKETHOST_SFTP_HOST_KEY }}
+      POCKETHOST_INSTANCE_NAME: \${{ vars.POCKETHOST_INSTANCE_NAME != '' && vars.POCKETHOST_INSTANCE_NAME || secrets.POCKETHOST_INSTANCE_NAME }}
       HEALTHCHECK_BASE_URL: \${{ vars.HEALTHCHECK_BASE_URL }}
       GITHUB_REF_NAME: \${{ github.ref_name }}
 
@@ -38,7 +39,7 @@ jobs:
       - name: Checkout current commit
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Set up Node.js for legacy project checks
         uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -70,4 +71,3 @@ export async function installWorkflow(projectRoot, { force = false } = {}) {
 
   return workflowPath;
 }
-

@@ -2,6 +2,8 @@
 
 Ultra-simple PocketBase and Pockethost automation CLI.
 
+This Node package is a transitional compatibility CLI. New projects should use the statically linked Go `pocketbase-pockethost` binary for PocketHost SFTP deployment.
+
 Main commands:
 
 - `init`
@@ -11,7 +13,7 @@ Main commands:
 - `doctor`
 - `health`
 - `deploy`
-- `ftp:deploy`
+- `deploy` (legacy Node compatibility)
 - `workflow:install`
 - `migration:new`
 - `hooks:new`

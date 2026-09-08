@@ -1,6 +1,6 @@
 {
   "name": "pocketbase-pockethost",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Ultra-simple PocketBase and Pockethost automation CLI.",
   "type": "module",
   "bin": {
@@ -15,11 +15,10 @@
     "templates"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=18.20.4"
   },
   "dependencies": {
-    "basic-ftp": "^5.0.5",
-    "extract-zip": "^2.0.1"
+    "extract-zip": "^2.0.1",
+    "ssh2-sftp-client": "^12.1.1"
   }
 }
-

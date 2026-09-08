@@ -1,0 +1,47 @@
+name: Deploy PocketHost demo
+
+on:
+  push:
+    branches: [main, staging]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pockethost-demo-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'staging' && 'staging' || 'production' }}
+    defaults:
+      run:
+        working-directory: demo
+    env:
+      POCKETHOST_SFTP_USERNAME: ${{ secrets.POCKETHOST_SFTP_USERNAME }}
+      POCKETHOST_SFTP_PRIVATE_KEY: ${{ secrets.POCKETHOST_SFTP_PRIVATE_KEY }}
+      POCKETHOST_SFTP_HOST_KEY: ${{ vars.POCKETHOST_SFTP_HOST_KEY }}
+      POCKETHOST_INSTANCE_NAME: ${{ vars.POCKETHOST_INSTANCE_NAME }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pocketbase-pockethost
+        env:
+          VERSION: 0.1.0
+        run: |
+          curl --fail --location --silent --show-error \
+            "https://github.com/8bit-interactive/pocketbase-pockethost-skills/releases/download/v${VERSION}/pocketbase-pockethost_${VERSION}_linux_amd64.tar.gz" \
+            --output /tmp/pocketbase-pockethost.tar.gz
+          curl --fail --location --silent --show-error \
+            "https://github.com/8bit-interactive/pocketbase-pockethost-skills/releases/download/v${VERSION}/checksums.txt" \
+            --output /tmp/pocketbase-pockethost-checksums.txt
+          cd /tmp
+          grep "pocketbase-pockethost_${VERSION}_linux_amd64.tar.gz" pocketbase-pockethost-checksums.txt | sha256sum --check
+          tar -xzf pocketbase-pockethost.tar.gz
+          install pocketbase-pockethost /usr/local/bin/pocketbase-pockethost
+      - run: pocketbase-pockethost doctor
+      - run: pocketbase-pockethost validate
+      - run: pocketbase-pockethost deploy
+      - run: pocketbase-pockethost health
