@@ -1,0 +1,90 @@
+:root {
+  color-scheme: light;
+  --bg: #f2efe9;
+  --panel: rgba(255, 255, 255, 0.82);
+  --ink: #1f1d1a;
+  --muted: #685f55;
+  --accent: #b25d39;
+  --border: rgba(31, 29, 26, 0.12);
+  --shadow: 0 24px 80px rgba(51, 32, 21, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at top left, rgba(178, 93, 57, 0.12), transparent 32rem),
+    linear-gradient(180deg, #fcfaf7 0%, var(--bg) 100%);
+}
+
+.hero {
+  width: min(48rem, calc(100vw - 3rem));
+  margin: 8vh auto;
+  padding: 2rem;
+  border: 1px solid var(--border);
+  border-radius: 1.5rem;
+  background: var(--panel);
+  backdrop-filter: blur(18px);
+  box-shadow: var(--shadow);
+}
+
+.eyebrow,
+dt {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+h1 {
+  margin: 0.35rem 0 1rem;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  line-height: 0.95;
+}
+
+.lede {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+code {
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.45rem;
+  background: rgba(31, 29, 26, 0.08);
+  font-family: "SFMono-Regular", "Menlo", monospace;
+  font-size: 0.92em;
+}
+
+.facts {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  margin: 2rem 0 0;
+}
+
+.facts div {
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+dd {
+  margin: 0.35rem 0 0;
+  font-size: 1.05rem;
+}
+
+@media (max-width: 640px) {
+  .hero {
+    width: min(100vw - 1.5rem, 100%);
+    margin: 1rem auto;
+    padding: 1.4rem;
+  }
+}

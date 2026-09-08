@@ -6,7 +6,6 @@
   ],
   "scripts": {
     "cli": "node packages/pocketbase-pockethost/bin/pocketbase-pockethost.js",
-    "test:cli": "node packages/pocketbase-pockethost/bin/pocketbase-pockethost.js --help"
+    "test:cli": "node packages/pocketbase-pockethost/bin/pocketbase-pockethost.js --help && node --test packages/pocketbase-pockethost/test/*.test.js"
   }
 }
-

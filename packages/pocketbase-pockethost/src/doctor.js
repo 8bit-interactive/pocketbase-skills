@@ -35,7 +35,7 @@ export async function runDoctor(project, options = {}) {
   }
 
   if (forDeploy && surface.pbPublic && !healthcheckBaseUrl) {
-    issues.push(`Missing healthcheck target for environment '${environmentName}'. Configure tenantId or healthcheckBaseUrl.`);
+    issues.push(`Missing healthcheck target for environment '${environmentName}'. Configure instanceName or healthcheckBaseUrl.`);
   }
 
   console.log(`Project root: ${project.projectRoot}`);

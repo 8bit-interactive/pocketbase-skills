@@ -1,0 +1,13 @@
+{
+  "name": "pocketbase-pockethost-skills-demo",
+  "private": true,
+  "scripts": {
+    "deploy": "pocketbase-pockethost deploy",
+    "doctor": "pocketbase-pockethost doctor",
+    "health": "pocketbase-pockethost health",
+    "workflow:install": "pocketbase-pockethost workflow:install --force"
+  },
+  "devDependencies": {
+    "pocketbase-pockethost": "file:../packages/pocketbase-pockethost"
+  }
+}

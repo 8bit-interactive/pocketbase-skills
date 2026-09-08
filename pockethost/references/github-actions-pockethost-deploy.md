@@ -1,83 +1,93 @@
-# GitHub Actions Deployment for Pockethost
+# GitHub Actions SFTP Deployment for Pockethost
 
-Use this reference when a repository needs a standard GitHub Actions workflow for deploying to Pockethost.
+Use this reference when a repository needs a standard GitHub Actions deployment to Pockethost.
 
-## Current Direction
+## Connection contract
 
-The preferred model is no longer:
+Pockethost uses SFTP for file deployment:
 
-- copy a long workflow
-- copy a long `Makefile`
-- maintain shell logic in every project
+| Setting | Value |
+| --- | --- |
+| Protocol | SFTP |
+| Host | `ftp.pockethost.io` |
+| Port | `2222` |
+| Username | Pockethost account email |
+| Authentication | Ed25519 SSH private key |
+| Password | Not used |
 
-The preferred model is now:
+Register the public key under **Account → Keys**. Keep the private key only in a local key file or a GitHub secret.
 
-1. scaffold or maintain the project with `pocketbase-pockethost`
-2. generate a local workflow in the consuming repository
-3. let GitHub Actions call the CLI for `doctor`, `test`, and `deploy`
+## Project conventions
 
-## Project Conventions
-
-Default conventions:
-
-- `main` -> GitHub Environment `production`
-- `master` -> GitHub Environment `production`
-- `staging` -> GitHub Environment `staging`
+- `main` → GitHub Environment `production`
+- `master` → GitHub Environment `production`
+- `staging` → GitHub Environment `staging`
 - `pb_public/` is the main static site surface
 - `pb_hooks/` and `pb_migrations/` are optional
 - `.pb_version` pins the PocketBase version
 - `.pb_config.json` is the single explicit project config file
+- `POCKETHOST_INSTANCE_NAME` is the instance subdomain, not a UUID
 
-## Required GitHub Environment Configuration
+## GitHub Environment configuration
 
-For both `production` and `staging`, configure:
+Configure both `production` and `staging` with:
 
-- `POCKETHOST_FTP_USERNAME` as an environment secret
-- `POCKETHOST_FTP_PASSWORD` as an environment secret
-- `POCKETHOST_TENANT_ID` as an environment variable or secret
+- `POCKETHOST_SFTP_USERNAME` as an environment secret
+- `POCKETHOST_SFTP_PRIVATE_KEY` as an environment secret
+- `POCKETHOST_INSTANCE_NAME` as an environment variable or secret
 
 Optional:
 
-- `HEALTHCHECK_BASE_URL` as an environment variable when the public URL should not be derived from the tenant ID
+- `HEALTHCHECK_BASE_URL` as an environment variable when the public URL is not the default instance URL
 
-## Workflow Behavior
+For the demo in this repository, use:
 
-The generated workflow should:
+- `production`: `pocketbase-pockethost-skills`
+- `staging`: `pocketbase-pockethost-skills-staging`
 
-1. check out the repository
-2. install Node dependencies
-3. run `pocketbase-pockethost doctor --strict --for deploy`
-4. run `pocketbase-pockethost test`
-5. run `pocketbase-pockethost deploy`
+## Reusable workflow
 
-This keeps the workflow very small and pushes the real logic into the CLI.
+The public workflow is available at:
 
-## Why This Is Better
+```yaml
+jobs:
+  deploy:
+    uses: 8bit-interactive/pocketbase-pockethost-skills/.github/workflows/pockethost-deploy.yml@v0.2.0
+    with:
+      working-directory: .
+    secrets: inherit
+```
 
-Compared with the previous shell-heavy approach:
+The workflow uses `wlixcc/SFTP-Deploy-Action@v1.2.6` with `sftp_only: true` and uploads `pb_public`, `pb_hooks`, and `pb_migrations` when present. It never sends an FTP password and does not delete remote files by default.
 
-- fewer project files need manual editing
-- fewer long workflow branches live in YAML
-- local and CI deploys share the same deploy engine
-- PocketBase version management moves into `.pb_version`
-- GitHub failures become easier to explain because `doctor` fails early with configuration-specific messages
+## Local CLI deployment
 
-## FTP Deployment Rules
+For local deployment, use the package CLI:
 
-The CLI deploy behavior should stay convention-based:
+```bash
+export POCKETHOST_SFTP_USERNAME="you@example.com"
+export POCKETHOST_SFTP_PRIVATE_KEY_PATH="$HOME/.ssh/pockethost_ed25519"
+export POCKETHOST_INSTANCE_NAME="my-instance"
+npx pocketbase-pockethost doctor --strict --for deploy
+npx pocketbase-pockethost deploy
+```
 
-- `pb_public` uploads to `${POCKETHOST_TENANT_ID}/pb_public/` when a tenant ID is available
-- otherwise `pb_public` uploads to `pb_public/`
-- `pb_hooks` and `pb_migrations` require a tenant-scoped path
+In CI, use `POCKETHOST_SFTP_PRIVATE_KEY` for the multiline private-key secret instead of `POCKETHOST_SFTP_PRIVATE_KEY_PATH`.
 
-Manual FTP deploy stays supported for users who do not use GitHub.
+## Migration notes
 
-## Transitional Assets
+Replace the old `POCKETHOST_FTP_USERNAME`, `POCKETHOST_FTP_PASSWORD`, and port 21 configuration with the SFTP settings above. `ftp:deploy` remains only as a deprecated CLI alias; it now uses SFTP and does not connect through FTP.
 
-These files remain in the repository during the transition:
+Do not use `secure: false`, `basic-ftp`, or `SamKirkland/FTP-Deploy-Action` for new Pockethost deployments.
 
-- [../assets/github-actions-pockethost-deploy.yml](../assets/github-actions-pockethost-deploy.yml)
-- [../assets/github-actions-pockethost-deploy-standalone.yml](../assets/github-actions-pockethost-deploy-standalone.yml)
-- [../assets/Makefile](../assets/Makefile)
+## Troubleshooting
 
-Treat them as compatibility material, not the long-term center of the product.
+- `Permission denied (publickey)`: verify that the public Ed25519 key is registered and that the username is the Pockethost email.
+- `Connection refused`: verify port `2222`, not `21` or `22`.
+- `Invalid format`: preserve the complete multiline private key, including its final newline, in the GitHub secret.
+- `Missing instance`: use the Pockethost subdomain in `POCKETHOST_INSTANCE_NAME`.
+
+## References
+
+- [Pockethost SFTP file access documentation](https://pockethost.io/docs/ftp)
+- [Pockethost FTPS sunset announcement](https://pockethost.io/blog/ftps-sunset)

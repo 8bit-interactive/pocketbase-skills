@@ -1,0 +1,4 @@
+node_modules/
+.pb/
+pb_data/
+.DS_Store
