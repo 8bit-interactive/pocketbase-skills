@@ -110,12 +110,18 @@ export function resolveEnvironmentConfig(project, environmentName) {
   return project.config.pockethost?.environments?.[environmentName] || {};
 }
 
-export function resolveTenantId(project, environmentName) {
+export function resolveInstanceName(project, environmentName) {
   const config = resolveEnvironmentConfig(project, environmentName);
-  return process.env.POCKETHOST_TENANT_ID || config.tenantId || "";
+  return process.env.POCKETHOST_INSTANCE_NAME
+    || config.instanceName
+    || process.env.POCKETHOST_TENANT_ID
+    || config.tenantId
+    || "";
 }
 
-export function resolveHealthcheckBaseUrl(project, environmentName, tenantId) {
+export const resolveTenantId = resolveInstanceName;
+
+export function resolveHealthcheckBaseUrl(project, environmentName, instanceName) {
   const environmentConfig = resolveEnvironmentConfig(project, environmentName);
   const rootBaseUrl = project.config.pockethost?.healthcheckBaseUrl || "";
   const environmentBaseUrl = environmentConfig.healthcheckBaseUrl || "";
@@ -132,8 +138,8 @@ export function resolveHealthcheckBaseUrl(project, environmentName, tenantId) {
     return rootBaseUrl;
   }
 
-  if (tenantId) {
-    return `https://${tenantId}.pockethost.io`;
+  if (instanceName) {
+    return `https://${instanceName}.pockethost.io`;
   }
 
   return "";

@@ -23,6 +23,14 @@ GitHub Environments:
 
 Required GitHub Environment values:
 
-- `POCKETHOST_FTP_USERNAME` as a secret
-- `POCKETHOST_FTP_PASSWORD` as a secret
-- `POCKETHOST_TENANT_ID` as a variable or secret
+- `POCKETHOST_SFTP_USERNAME` as a secret
+- `POCKETHOST_SFTP_PRIVATE_KEY` as a secret
+- `POCKETHOST_INSTANCE_NAME` as a variable or secret
+
+Pockethost connection settings:
+
+- Protocol: SFTP
+- Host: `ftp.pockethost.io`
+- Port: `2222`
+- Username: your Pockethost account email
+- Authentication: an Ed25519 private key registered under Account → Keys

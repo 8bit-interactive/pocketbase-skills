@@ -1,23 +1,47 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { Client } from "basic-ftp";
+import SftpClient from "ssh2-sftp-client";
 import { CommandError } from "./errors.js";
-import { detectProjectSurface, resolveEnvironmentName, resolveHealthcheckBaseUrl, resolveTenantId } from "./project.js";
+import { detectProjectSurface, resolveEnvironmentName, resolveHealthcheckBaseUrl, resolveInstanceName } from "./project.js";
 
 async function deployDirectory(client, localDir, remoteDir) {
-  await client.ensureDir(remoteDir);
-  await client.uploadFromDir(localDir, remoteDir);
+  await client.uploadDir(localDir, remoteDir);
+}
+
+async function resolvePrivateKey() {
+  if (process.env.POCKETHOST_SFTP_PRIVATE_KEY) {
+    return process.env.POCKETHOST_SFTP_PRIVATE_KEY
+      .replace(/\r\n/g, "\n")
+      .replace(/\\n/g, "\n");
+  }
+
+  if (process.env.POCKETHOST_SFTP_PRIVATE_KEY_PATH) {
+    return fs.readFile(process.env.POCKETHOST_SFTP_PRIVATE_KEY_PATH, "utf8");
+  }
+
+  return "";
+}
+
+function resolveSftpPort() {
+  const value = process.env.POCKETHOST_SFTP_PORT || "2222";
+  const port = Number(value);
+
+  if (!Number.isInteger(port) || port <= 0) {
+    throw new CommandError(`Invalid POCKETHOST_SFTP_PORT: ${value}`);
+  }
+
+  return port;
 }
 
 export async function runHealthcheck(project, environmentName) {
-  const tenantId = resolveTenantId(project, environmentName);
-  const baseUrl = resolveHealthcheckBaseUrl(project, environmentName, tenantId);
+  const instanceName = resolveInstanceName(project, environmentName);
+  const baseUrl = resolveHealthcheckBaseUrl(project, environmentName, instanceName);
   const indexHtml = await fs.readFile(path.join(project.projectRoot, "pb_public", "index.html"), "utf8");
   const expectedHeadingMatch = indexHtml.match(/<h1>(.*?)<\/h1>/is);
   const expectedHeading = expectedHeadingMatch ? expectedHeadingMatch[1].trim() : "";
 
   if (!baseUrl) {
-    throw new CommandError(`Missing healthcheck base URL for environment '${environmentName}'. Set HEALTHCHECK_BASE_URL or POCKETHOST_TENANT_ID.`);
+    throw new CommandError(`Missing healthcheck base URL for environment '${environmentName}'. Set HEALTHCHECK_BASE_URL or POCKETHOST_INSTANCE_NAME.`);
   }
 
   if (!expectedHeading) {
@@ -42,33 +66,36 @@ export async function runHealthcheck(project, environmentName) {
 
 export async function deployProject(project, options = {}) {
   const environmentName = await resolveEnvironmentName(project, options);
-  const tenantId = resolveTenantId(project, environmentName);
-  const ftpUsername = process.env.POCKETHOST_FTP_USERNAME || "";
-  const ftpPassword = process.env.POCKETHOST_FTP_PASSWORD || "";
-  const ftpHost = process.env.POCKETHOST_FTP_HOST || "ftp.pockethost.io";
+  const instanceName = resolveInstanceName(project, environmentName);
+  const sftpUsername = process.env.POCKETHOST_SFTP_USERNAME || "";
+  const sftpHost = process.env.POCKETHOST_SFTP_HOST || "ftp.pockethost.io";
+  const sftpPort = resolveSftpPort();
   const dryRun = options.dryRun === true;
   const surface = await detectProjectSurface(project.projectRoot);
+  const sftpPrivateKey = dryRun ? "dry-run" : await resolvePrivateKey();
 
-  if (!ftpUsername) {
-    throw new CommandError(`Missing POCKETHOST_FTP_USERNAME for environment '${environmentName}'.`);
+  if (!instanceName) {
+    throw new CommandError(`Missing POCKETHOST_INSTANCE_NAME for environment '${environmentName}'. Configure the Pockethost instance subdomain.`);
   }
 
-  if (!ftpPassword) {
-    throw new CommandError(`Missing POCKETHOST_FTP_PASSWORD for environment '${environmentName}'.`);
+  if (!dryRun && !sftpUsername) {
+    throw new CommandError(`Missing POCKETHOST_SFTP_USERNAME for environment '${environmentName}'.`);
   }
 
-  if ((surface.pbHooks || surface.pbMigrations) && !tenantId) {
-    throw new CommandError(`Missing POCKETHOST_TENANT_ID for environment '${environmentName}'. Hooks and migrations require a tenant-scoped deploy path.`);
+  if (!dryRun && !sftpPrivateKey) {
+    throw new CommandError(`Missing POCKETHOST_SFTP_PRIVATE_KEY or POCKETHOST_SFTP_PRIVATE_KEY_PATH for environment '${environmentName}'.`);
   }
 
-  const publicDir = tenantId ? `${tenantId}/pb_public` : "pb_public";
-  const hooksDir = tenantId ? `${tenantId}/pb_hooks` : "";
-  const migrationsDir = tenantId ? `${tenantId}/pb_migrations` : "";
+  const publicDir = `/${instanceName}/pb_public`;
+  const hooksDir = `/${instanceName}/pb_hooks`;
+  const migrationsDir = `/${instanceName}/pb_migrations`;
 
   if (dryRun) {
     return {
       environmentName,
-      ftpHost,
+      instanceName,
+      sftpHost,
+      sftpPort,
       publicDir,
       hooksDir,
       migrationsDir,
@@ -76,15 +103,15 @@ export async function deployProject(project, options = {}) {
     };
   }
 
-  const client = new Client();
-  client.ftp.verbose = false;
+  const client = new SftpClient();
+  let deploymentError;
 
   try {
-    await client.access({
-      host: ftpHost,
-      user: ftpUsername,
-      password: ftpPassword,
-      secure: false
+    await client.connect({
+      host: sftpHost,
+      port: sftpPort,
+      username: sftpUsername,
+      privateKey: sftpPrivateKey
     });
 
     if (surface.pbPublic) {
@@ -101,8 +128,17 @@ export async function deployProject(project, options = {}) {
       console.log(`Uploading pb_migrations -> ${migrationsDir}`);
       await deployDirectory(client, path.join(project.projectRoot, "pb_migrations"), migrationsDir);
     }
+  } catch (error) {
+    deploymentError = error;
+    throw error;
   } finally {
-    client.close();
+    try {
+      await client.end();
+    } catch (closeError) {
+      if (!deploymentError) {
+        throw closeError;
+      }
+    }
   }
 
   if (surface.pbPublic) {
@@ -111,7 +147,9 @@ export async function deployProject(project, options = {}) {
 
   return {
     environmentName,
-    ftpHost,
+    instanceName,
+    sftpHost,
+    sftpPort,
     publicDir,
     hooksDir,
     migrationsDir,

@@ -11,7 +11,7 @@ It is designed for:
 - small zero-build sites served from `pb_public`
 - PocketBase projects that still need hooks and migrations
 - GitHub-based deploys
-- manual FTP deploys for people not using GitHub
+- manual SFTP deploys for people not using GitHub
 
 ## What Lives In This Repository
 
@@ -48,7 +48,7 @@ This package provides:
 - migration and hook generators
 - health checks
 - GitHub workflow generation
-- manual FTP deploys
+- manual SFTP deploys
 
 ## Default Project Model
 
@@ -77,7 +77,7 @@ The v1 command surface is:
 - `npx pocketbase-pockethost doctor`
 - `npx pocketbase-pockethost health`
 - `npx pocketbase-pockethost deploy`
-- `npx pocketbase-pockethost ftp:deploy`
+- `npx pocketbase-pockethost sftp:deploy`
 - `npx pocketbase-pockethost workflow:install`
 - `npx pocketbase-pockethost migration:new <name>`
 - `npx pocketbase-pockethost hooks:new <name>`
@@ -91,5 +91,30 @@ The direction is now:
 - one config file: `.pb_config.json`
 - one PocketBase version file: `.pb_version`
 - Node/NPM as the only required user dependency
+
+## Pockethost SFTP
+
+Pockethost deployments use SFTP on `ftp.pockethost.io:2222`.
+
+Required GitHub Environment configuration:
+
+- `POCKETHOST_SFTP_USERNAME`: the Pockethost account email, as a secret
+- `POCKETHOST_SFTP_PRIVATE_KEY`: an Ed25519 private key registered under Account → Keys, as a secret
+- `POCKETHOST_INSTANCE_NAME`: the instance subdomain, as a variable or secret
+
+The reusable workflow is public and can be consumed from another repository:
+
+```yaml
+jobs:
+  deploy:
+    uses: 8bit-interactive/pocketbase-pockethost-skills/.github/workflows/pockethost-deploy.yml@v0.2.0
+    with:
+      working-directory: .
+    secrets: inherit
+```
+
+For a caller outside the same organization, pass the three values explicitly in the `secrets` mapping instead of using `secrets: inherit`.
+
+Create a project quickly with `npx pocketbase-pockethost init`, then run `npx pocketbase-pockethost workflow:install`.
 
 Legacy copy-paste assets such as long `Makefile`-driven flows are kept only as transitional material while the CLI becomes the default path.
