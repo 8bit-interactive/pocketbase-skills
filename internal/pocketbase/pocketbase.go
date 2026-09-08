@@ -18,19 +18,23 @@ import (
 const DefaultVersion = "0.40.3"
 
 func AssetPlatform() (string, error) {
-	if runtime.GOOS == "darwin" && (runtime.GOARCH == "amd64" || runtime.GOARCH == "arm64") {
-		return runtime.GOOS + "_" + runtime.GOARCH, nil
+	return assetPlatform(runtime.GOOS, runtime.GOARCH)
+}
+
+func assetPlatform(goos, goarch string) (string, error) {
+	if goos == "darwin" && (goarch == "amd64" || goarch == "arm64") {
+		return goos + "_" + goarch, nil
 	}
-	if runtime.GOOS == "windows" && (runtime.GOARCH == "amd64" || runtime.GOARCH == "arm64") {
-		return runtime.GOOS + "_" + runtime.GOARCH, nil
+	if goos == "windows" && (goarch == "amd64" || goarch == "arm64") {
+		return goos + "_" + goarch, nil
 	}
-	switch runtime.GOOS + "/" + runtime.GOARCH {
+	switch goos + "/" + goarch {
 	case "linux/amd64", "linux/arm64", "linux/ppc64le", "linux/s390x":
-		return runtime.GOOS + "_" + runtime.GOARCH, nil
+		return goos + "_" + goarch, nil
 	case "linux/arm":
 		return "linux_armv7", nil
 	default:
-		return "", fmt.Errorf("unsupported PocketBase platform %s/%s", runtime.GOOS, runtime.GOARCH)
+		return "", fmt.Errorf("unsupported PocketBase platform %s/%s", goos, goarch)
 	}
 }
 
